@@ -42,16 +42,17 @@ export async function GET() {
   // Uložení do databáze
   try {
     for (const r of results) {
+      // ZMĚNA: Přidali jsme 'code' do závorky i do VALUES
       await sql`
-        INSERT INTO uptime_logs (url, status, latency)
-        VALUES (${r.url}, ${r.status}, ${r.latency});
+        INSERT INTO uptime_logs (url, status, latency, code)
+        VALUES (${r.url}, ${r.status}, ${r.latency}, ${r.code});
       `;
     }
     
     return NextResponse.json({ message: 'Hotovo', saved: results.length, data: results });
-    
-  // ZMĚNA 2: Smazáno (_error), stačí jen catch
-  } catch {
+
+  } catch (error) { // Tady si necháme vypsat chybu do konzole pro jistotu
+    console.error("Chyba DB:", error); 
     return NextResponse.json({ error: 'Chyba při ukládání' }, { status: 500 });
   }
 }
