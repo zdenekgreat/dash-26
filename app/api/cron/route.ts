@@ -6,9 +6,12 @@ import { URL } from 'url';
 export const dynamic = 'force-dynamic';
 
 const DOMAINS = [
-  'https://olkraj.cz',
-  'https://portal.olkraj.cz',
-  'https://google.com',
+  'https://exil.cz',
+  'https://shaka.cz',
+  'https://buclik.cz',
+  'https://summittattoo.cz',
+  'https://greatidea.cz',
+  'https://greatlab.cz',
 ];
 
 // Pomocná funkce pro získání expirace certifikátu
