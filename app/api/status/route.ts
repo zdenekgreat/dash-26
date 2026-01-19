@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { rows } = await sql`
+    // 1. Získáme hlavní seznam domén
+    const { rows: domains } = await sql`
       SELECT 
         name,
         url,
@@ -17,9 +18,30 @@ export async function GET() {
       FROM uptime_logs u1
       GROUP BY name, url;
     `;
-    return NextResponse.json(rows);
+
+    // 2. Najdeme nejbližší expiraci SSL
+    const { rows: nearSSL } = await sql`
+      SELECT name, cert_expiry 
+      FROM uptime_logs 
+      WHERE cert_expiry IS NOT NULL AND cert_expiry > NOW()
+      ORDER BY cert_expiry ASC LIMIT 1;
+    `;
+
+    // 3. Najdeme nejbližší expiraci Domény
+    const { rows: nearDom } = await sql`
+      SELECT name, domain_expiry 
+      FROM uptime_logs 
+      WHERE domain_expiry IS NOT NULL AND domain_expiry > NOW()
+      ORDER BY domain_expiry ASC LIMIT 1;
+    `;
+
+    return NextResponse.json({
+      domains,
+      nearestSSL: nearSSL[0] || null,
+      nearestDomain: nearDom[0] || null
+    });
   } catch (error) {
     console.error(error);
-    return NextResponse.json([]);
+    return NextResponse.json({ domains: [] });
   }
 }
