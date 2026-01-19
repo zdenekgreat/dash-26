@@ -38,7 +38,18 @@ export default function MonitoringPage() {
     } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    // 1. Načíst hned po otevření
+    fetchData();
+
+    // 2. Nastavit interval (např. každých 30000 ms = 30 sekund)
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000);
+
+    // 3. Úklid při odchodu ze stránky
+    return () => clearInterval(interval);
+  }, []);
 
   const getDaysRemaining = (dateString: string | null) => {
     if (!dateString) return null;
