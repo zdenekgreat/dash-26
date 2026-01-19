@@ -22,22 +22,21 @@ function getSSLExpiry(targetUrl: string): Promise<Date | null> {
   return new Promise((resolve) => {
     try {
       const urlObj = new URL(targetUrl);
-      const options = { host: urlObj.hostname, port: 443, servername: urlObj.hostname, rejectUnauthorized: false, timeout: 3000 };
+      const options = { 
+        host: urlObj.hostname, 
+        port: 443, 
+        servername: urlObj.hostname, 
+        rejectUnauthorized: false, 
+        timeout: 3000 
+      };
       const socket = tls.connect(options, () => {
         const cert = socket.getPeerCertificate();
         socket.end();
         resolve(cert && cert.valid_to ? new Date(cert.valid_to) : null);
       });
-      socket.on('error', (err) => { 
-        console.error(`SSL Error ${targetUrl}:`, err); 
-        resolve(null); 
-      });
+      socket.on('error', (err) => { console.error(`SSL Error ${targetUrl}:`, err); resolve(null); });
       socket.on('timeout', () => { socket.destroy(); resolve(null); });
-    } catch (e) { 
-      // OPRAVA: Vypíšeme chybu 'e', aby nebyla nepoužitá
-      console.error(`SSL Config Error:`, e);
-      resolve(null); 
-    }
+    } catch (e) { console.error(`SSL Config Error:`, e); resolve(null); }
   });
 }
 
@@ -45,10 +44,20 @@ function getSSLExpiry(targetUrl: string): Promise<Date | null> {
 function getDomainExpiry(targetUrl: string): Promise<Date | null> {
   return new Promise((resolve) => {
     try {
-      const hostname = new URL(targetUrl).hostname;
-      const tld = hostname.split('.').pop();
+      // Získáme čistou doménu bez 'www.' (důležité pro WHOIS)
+      let hostname = new URL(targetUrl).hostname;
+      if (hostname.startsWith('www.')) {
+        hostname = hostname.replace('www.', '');
+      }
+
+      const parts = hostname.split('.');
+      const tld = parts[parts.length - 1]; // Získáme koncovku (cz, com, cloud...)
       
-      const whoisServer = tld === 'cz' ? 'whois.nic.cz' : 'whois.verisign-grs.com';
+      // Mapování serverů (přidáme základní podporu pro více koncovek)
+      let whoisServer = 'whois.verisign-grs.com'; // Default pro .com, .net
+      if (tld === 'cz') whoisServer = 'whois.nic.cz';
+      if (tld === 'cloud') whoisServer = 'whois.nic.cloud'; // Pro Ginis
+      
       const port = 43;
 
       const socket = net.createConnection(port, whoisServer, () => {
@@ -65,13 +74,13 @@ function getDomainExpiry(targetUrl: string): Promise<Date | null> {
         if (tld === 'cz') {
             match = data.match(/expire:\s+(\d{2}\.\d{2}\.\d{4})/);
             if (match && match[1]) {
-                const parts = match[1].split('.');
-                resolve(new Date(`${parts[2]}-${parts[1]}-${parts[0]}`));
+                const p = match[1].split('.');
+                resolve(new Date(`${p[2]}-${p[1]}-${p[0]}`));
                 return;
             }
         }
         
-        // .COM/.NET
+        // Ostatní mezinárodní (ISO formát YYYY-MM-DD)
         match = data.match(/Registry Expiry Date:\s+(\d{4}-\d{2}-\d{2})/);
         if (match && match[1]) {
             resolve(new Date(match[1]));
@@ -99,9 +108,16 @@ export async function GET() {
     let certExpiry = null;
     let domainExpiry = null;
 
-    // A. Měření odezvy
+    // A. Měření odezvy (s User-Agentem pro oklamání firewallu)
     try {
-      const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+      const res = await fetch(url, { 
+        method: 'GET', 
+        cache: 'no-store',
+        headers: {
+            // Tváříme se jako Chrome na Windows, aby nás Olkraj.cz nezablokoval
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      });
       code = res.status;
       latency = Date.now() - start;
       status = (res.ok || res.status < 400) ? 'online' : 'offline';
@@ -111,7 +127,7 @@ export async function GET() {
       status = 'offline';
     }
 
-    // B. Získání dat (jen pokud jsme online)
+    // B. Získání dat
     if (status === 'online') {
       const [sslDate, domDate] = await Promise.all([
         getSSLExpiry(url),
