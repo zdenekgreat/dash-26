@@ -12,6 +12,7 @@ const DOMAINS = [
   'https://summittattoo.cz',
   'https://greatidea.cz',
   'https://greatlab.cz',
+  'https://dash-26.vercel.app',
 ];
 
 // Pomocná funkce pro získání expirace certifikátu
