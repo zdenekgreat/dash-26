@@ -14,12 +14,13 @@ export async function GET() {
         status VARCHAR(50) NOT NULL,
         latency INTEGER,
         code INTEGER,
-        cert_expiry TIMESTAMP,  -- NOVÝ SLOUPEC PRO DATUM EXPIRACE
+        cert_expiry TIMESTAMP,    -- Expirace SSL (Zámeček)
+        domain_expiry TIMESTAMP,  -- NOVÉ: Expirace Domény (Vlastnictví)
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
-    return NextResponse.json({ message: "Tabulka aktualizována o expirace! 🎉" });
+    return NextResponse.json({ message: "Tabulka připravena pro domény! 🎉" });
   } catch (error) {
     return NextResponse.json({ error: error }, { status: 500 });
   }

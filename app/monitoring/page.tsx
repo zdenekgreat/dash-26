@@ -112,7 +112,7 @@ export default function MonitoringPage() {
               <tr className="bg-[#0f172a]/50 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="p-4 font-semibold">Doména</th>
                 <th className="p-4 font-semibold">Stav</th>
-                <th className="p-4 font-semibold">Expirace (Platnost)</th>
+                <th className="p-4 font-semibold">Expirace SSL</th>
                 <th className="p-4 font-semibold">Odezva</th>
                 <th className="p-4 font-semibold w-32">Trend</th>
                 <th className="p-4 font-semibold text-right">Akce</th>
