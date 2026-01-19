@@ -8,8 +8,13 @@ export const dynamic = 'force-dynamic';
 
 const DOMAINS = [
   'https://exil.cz',
+  'https://summittattoo.cz/',
+  'https://greatidea.cz',
+  'https://dash-26.vercel.app',
   'https://olkraj.cz',
-  'https://google.com',
+  'https://www.rodinajeok.cz/',
+  'https://www.ok-tourism.cz/',
+  'https://ude.ginis.cloud/olkraj/',
 ];
 
 // 1. Funkce pro SSL (Zámeček)
