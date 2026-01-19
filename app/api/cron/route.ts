@@ -11,7 +11,7 @@ const DOMAINS = [
   'https://summittattoo.cz/',
   'https://greatidea.cz',
   'https://dash-26.vercel.app',
-  'https://olkraj.cz',
+  'https://www.olkraj.cz',
   'https://www.rodinajeok.cz/',
   'https://www.ok-tourism.cz/',
   'https://ude.ginis.cloud/olkraj/',
