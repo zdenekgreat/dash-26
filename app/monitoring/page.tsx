@@ -11,7 +11,7 @@ import {
   RefreshCw, 
   ShieldCheck, 
   Lock, 
-  AlertTriangle 
+  CreditCard 
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
@@ -22,6 +22,7 @@ interface DomainStatus {
   code: number;
   uptime_percent: string;
   cert_expiry: string | null;
+  domain_expiry: string | null;
 }
 
 export default function MonitoringPage() {
@@ -47,16 +48,23 @@ export default function MonitoringPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   };
 
+  const getStatusColor = (days: number | null) => {
+    if (days === null) return "text-slate-500";
+    if (days < 14) return "text-red-400";
+    if (days < 60) return "text-orange-400";
+    return "text-green-400";
+  }
+
   const mockGraphData = [{ val: 40 }, { val: 30 }, { val: 45 }, { val: 50 }, { val: 48 }, { val: 60 }, { val: 55 }, { val: 70 }];
 
   return (
     <div className="space-y-6">
       
-      {/* 1. HLAVIČKA */}
+      {/* HLAVIČKA */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white">Monitoring domén</h2>
-          <div className="flex items-center gap-2 text-sm text-slate-400 mt-1"><span>Živá data + Expirace certifikátů</span></div>
+          <div className="flex items-center gap-2 text-sm text-slate-400 mt-1"><span>Kompletní dohled: Uptime + SSL + Expirace domén</span></div>
         </div>
         <div className="flex gap-3">
           <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-[#1e293b] text-slate-300 border border-slate-700 rounded-lg hover:bg-slate-800 hover:text-white transition"><RefreshCw size={18} className={loading ? "animate-spin" : ""} />Obnovit</button>
@@ -64,32 +72,16 @@ export default function MonitoringPage() {
         </div>
       </div>
 
-      {/* 2. KPI KARTY (Tady využijeme ty importované ikonky) */}
+      {/* KPI KARTY */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Karta 1: Počet domén */}
         <div className="bg-[#1e293b] p-6 rounded-xl border border-slate-700 flex items-center justify-between">
-          <div>
-            <p className="text-slate-400 text-sm font-medium">Monitorováno</p>
-            <p className="text-4xl font-bold text-white mt-2">{data.length}</p>
-          </div>
-          <div className="w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center text-blue-400">
-            <Globe size={24} /> {/* ZDE je Globe */}
-          </div>
+          <div><p className="text-slate-400 text-sm font-medium">Monitorováno</p><p className="text-4xl font-bold text-white mt-2">{data.length}</p></div>
+          <div className="w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center text-blue-400"><Globe size={24} /></div>
         </div>
-
-        {/* Karta 2: Celkový status */}
         <div className="bg-[#1e293b] p-6 rounded-xl border border-slate-700 flex items-center justify-between">
-          <div>
-            <p className="text-slate-400 text-sm font-medium">Status Systému</p>
-            <p className="text-4xl font-bold text-green-400 mt-2">100%</p>
-          </div>
-          <div className="w-12 h-12 bg-green-600/20 rounded-lg flex items-center justify-center text-green-400">
-            <ShieldCheck size={24} /> {/* ZDE je ShieldCheck */}
-          </div>
+          <div><p className="text-slate-400 text-sm font-medium">Status Systému</p><p className="text-4xl font-bold text-green-400 mt-2">100%</p></div>
+          <div className="w-12 h-12 bg-green-600/20 rounded-lg flex items-center justify-center text-green-400"><ShieldCheck size={24} /></div>
         </div>
-
-        {/* Karta 3: Odezva */}
         <div className="bg-[#1e293b] p-6 rounded-xl border border-slate-700 flex items-center justify-between">
           <div>
             <p className="text-slate-400 text-sm font-medium">Prům. Odezva</p>
@@ -98,13 +90,11 @@ export default function MonitoringPage() {
               <span className="text-lg text-slate-500 font-normal ml-2">ms</span>
             </p>
           </div>
-          <div className="w-12 h-12 bg-purple-600/20 rounded-lg flex items-center justify-center text-purple-400">
-            <Activity size={24} /> {/* ZDE je Activity */}
-          </div>
+          <div className="w-12 h-12 bg-purple-600/20 rounded-lg flex items-center justify-center text-purple-400"><Activity size={24} /></div>
         </div>
       </div>
 
-      {/* 3. TABULKA */}
+      {/* TABULKA */}
       <div className="bg-[#1e293b] rounded-xl border border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -112,7 +102,7 @@ export default function MonitoringPage() {
               <tr className="bg-[#0f172a]/50 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="p-4 font-semibold">Doména</th>
                 <th className="p-4 font-semibold">Stav</th>
-                <th className="p-4 font-semibold">Expirace SSL</th>
+                <th className="p-4 font-semibold">Platnost (Expirace)</th>
                 <th className="p-4 font-semibold">Odezva</th>
                 <th className="p-4 font-semibold w-32">Trend</th>
                 <th className="p-4 font-semibold text-right">Akce</th>
@@ -121,12 +111,8 @@ export default function MonitoringPage() {
             <tbody className="divide-y divide-slate-700 text-sm">
               {loading && data.length === 0 ? (<tr><td colSpan={6} className="p-8 text-center text-slate-500">Načítám...</td></tr>) : data.length === 0 ? (<tr><td colSpan={6} className="p-8 text-center text-slate-500">Žádná data. Spusťte CRON.</td></tr>) : (
                 data.map((item) => {
-                  const daysLeft = getDaysRemaining(item.cert_expiry);
-                  let expiryColor = "text-green-400";
-                  if (daysLeft !== null) {
-                    if (daysLeft < 7) expiryColor = "text-red-400";
-                    else if (daysLeft < 30) expiryColor = "text-orange-400";
-                  }
+                  const daysSSL = getDaysRemaining(item.cert_expiry);
+                  const daysDom = getDaysRemaining(item.domain_expiry);
 
                   return (
                   <tr key={item.url} className="hover:bg-slate-800/50 transition-colors group">
@@ -142,16 +128,32 @@ export default function MonitoringPage() {
                       )}
                     </td>
                     
+                    {/* DVOJITÁ EXPIRACE */}
                     <td className="p-4">
-                      {item.cert_expiry ? (
-                        <div className={`flex items-center gap-2 ${expiryColor}`}>
-                          {daysLeft! < 30 ? <AlertTriangle size={14}/> : <Lock size={14}/>}
-                          <span className="font-mono font-bold">{daysLeft} dní</span>
-                          <span className="text-slate-500 text-xs">({new Date(item.cert_expiry).toLocaleDateString('cs-CZ')})</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-500">-</span>
-                      )}
+                      <div className="flex flex-col gap-1.5">
+                        
+                        {/* 1. Řádek: DOMÉNA */}
+                        {item.domain_expiry ? (
+                           // ZDE JE OPRAVA: 'title' je na DIVu, ne na ikoně
+                           <div title="Platnost domény (Registrátor)" className={`flex items-center gap-2 ${getStatusColor(daysDom)}`}>
+                             <CreditCard size={14} />
+                             <span className="font-mono font-bold">{daysDom} dní</span>
+                             <span className="text-slate-500 text-xs hidden md:inline">({new Date(item.domain_expiry).toLocaleDateString('cs-CZ')})</span>
+                           </div>
+                        ) : (
+                           <div className="text-slate-600 text-xs flex items-center gap-2"><CreditCard size={14}/> Neznámá expirace</div>
+                        )}
+
+                        {/* 2. Řádek: SSL */}
+                        {item.cert_expiry ? (
+                           // ZDE JE OPRAVA: 'title' je na DIVu
+                           <div title="Platnost SSL certifikátu" className={`flex items-center gap-2 text-xs ${getStatusColor(daysSSL)}`}>
+                             <Lock size={12} />
+                             <span className="font-mono">SSL: {daysSSL} dní</span>
+                           </div>
+                        ) : null}
+
+                      </div>
                     </td>
 
                     <td className="p-4 text-white font-mono">{item.latency} ms</td>
