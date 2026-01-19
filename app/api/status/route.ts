@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 
-export const dynamic = 'force-dynamic'; // Aby se data načítala vždy čerstvá
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Tento SQL dotaz vytáhne POSLEDNÍ známý stav pro každou doménu
-    // (Seřadí podle URL a času, a vezme jen ten nejnovější záznam)
+    // Tento dotaz udělá dvě věci:
+    // 1. Získá POSLEDNÍ stav (pro semafor)
+    // 2. Spočítá PROCENTO úspěšnosti ze všech záznamů (pro SLA)
     const { rows } = await sql`
-      SELECT DISTINCT ON (url) url, status, latency, code, created_at
-      FROM uptime_logs
-      ORDER BY url, created_at DESC;
+      SELECT 
+        url,
+        (SELECT status FROM uptime_logs u2 WHERE u2.url = u1.url ORDER BY created_at DESC LIMIT 1) as status,
+        (SELECT latency FROM uptime_logs u2 WHERE u2.url = u1.url ORDER BY created_at DESC LIMIT 1) as latency,
+        (SELECT code FROM uptime_logs u2 WHERE u2.url = u1.url ORDER BY created_at DESC LIMIT 1) as code,
+        ROUND(
+          (COUNT(CASE WHEN status = 'online' THEN 1 END)::numeric / COUNT(*)::numeric) * 100, 
+          1
+        ) as uptime_percent
+      FROM uptime_logs u1
+      GROUP BY url;
     `;
 
     return NextResponse.json(rows);
   } catch (error) {
     console.error('Chyba DB:', error);
-    // Pokud tabulka ještě neexistuje, vrátíme prázdné pole, aby aplikace nespadla
     return NextResponse.json([]); 
   }
 }
