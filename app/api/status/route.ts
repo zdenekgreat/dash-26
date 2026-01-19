@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // 1. Získáme hlavní seznam domén
+    // 1. Získáme hlavní seznam domén SEŘAZENÝ ABECEDNĚ
     const { rows: domains } = await sql`
       SELECT 
         name,
@@ -16,7 +16,8 @@ export async function GET() {
         (SELECT domain_expiry FROM uptime_logs u2 WHERE u2.url = u1.url ORDER BY created_at DESC LIMIT 1) as domain_expiry,
         ROUND((COUNT(CASE WHEN status = 'online' THEN 1 END)::numeric / COUNT(*)::numeric) * 100, 1) as uptime_percent
       FROM uptime_logs u1
-      GROUP BY name, url;
+      GROUP BY name, url
+      ORDER BY name ASC;
     `;
 
     // 2. Najdeme nejbližší expiraci SSL
@@ -35,13 +36,19 @@ export async function GET() {
       ORDER BY domain_expiry ASC LIMIT 1;
     `;
 
+    // VRACÍME OBJEKT, KTERÝ FRONTEND OČEKÁVÁ
     return NextResponse.json({
-      domains,
+      domains: domains || [],
       nearestSSL: nearSSL[0] || null,
       nearestDomain: nearDom[0] || null
     });
+
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ domains: [] });
+    console.error("API Status Error:", error);
+    return NextResponse.json({ 
+      domains: [], 
+      nearestSSL: null, 
+      nearestDomain: null 
+    }, { status: 500 });
   }
 }
