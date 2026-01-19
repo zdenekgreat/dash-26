@@ -59,7 +59,7 @@ export default function AssetsPage() {
       {/* 1. HLAVIČKA */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">IT Majetek</h2>
+          <h2 className="text-2xl font-bold text-white">Licence, podpora</h2>
           <p className="text-slate-400 text-sm mt-1">Přehled IT infrastruktury a licencí KÚOL</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">

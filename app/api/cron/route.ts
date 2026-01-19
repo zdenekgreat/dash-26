@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 
 // SEM SI DOPLŇTE SVÝCH 10 DOMÉN
 const DOMAINS = [
-  'https://google.com',
-  'https://seznam.cz',
-  'https://vercel.com',
+  'https://exil.cz/',
+  'https://summittattoo.cz/',
+  'https://shaka.cz/',
   // 'https://vasedomena.cz',
 ];
 
