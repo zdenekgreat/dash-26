@@ -13,6 +13,7 @@ import {
   LogOut,
   ShieldCheck
 } from 'lucide-react';
+import { signOut } from "next-auth/react";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -121,12 +122,15 @@ export default function Sidebar() {
       </nav>
 
       {/* 4. PATIČKA */}
-      <div className="p-4 border-t border-slate-800">
-        <button className="flex items-center gap-3 px-3 py-2 w-full text-slate-400 hover:text-white transition-colors">
-          <LogOut size={18} />
-          <span>Odhlásit se</span>
-        </button>
-      </div>
+<div className="p-4 border-t border-slate-800">
+  <button 
+    onClick={() => signOut({ callbackUrl: '/login' })}
+    className="flex items-center gap-3 px-3 py-2 w-full text-slate-400 hover:text-red-400 transition-colors group"
+  >
+    <LogOut size={18} className="group-hover:scale-110 transition-transform" />
+    <span className="font-medium">Odhlásit se</span>
+  </button>
+</div>
 
     </aside>
   );
