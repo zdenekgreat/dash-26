@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic';
 const DOMAINS = [
   { name: 'EXIL', url: 'https://exil.cz' },
   { name: 'Summit Tattoo', url: 'https://summittattoo.cz/' },
-  { name: 'Great Idea', url: 'https://greatidea.cz' },
-  { name: 'Sentinel Dashboard', url: 'https://dash-26.vercel.app' },
-  { name: 'Olomoucký kraj', url: 'https://www.olkraj.cz' },
+  { name: 'Great Idea', url: 'https://greatidea.cz/' },
+  { name: 'Sentinel Dashboard', url: 'https://shaka.cz/' },
+  { name: 'Olomoucký kraj', url: 'https://www.olkraj.cz/' },
   { name: 'Rodina je OK', url: 'https://www.rodinajeok.cz/' },
   { name: 'OK Tourism', url: 'https://www.ok-tourism.cz/' },
   { name: 'GINIS Cloud', url: 'https://ude.ginis.cloud/olkraj/' },
